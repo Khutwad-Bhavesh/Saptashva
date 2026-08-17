@@ -1,6 +1,31 @@
 import pandas as pd
 import numpy as np
 
+def apply_neupert_enrichment(df):
+    """
+    Applies the Neupert effect physics principle:
+    Hard X-ray flux is proportional to the time derivative of Soft X-ray flux.
+    
+    If HEL1OS hard X-ray flux is missing (0 or NaN), this fills the gap 
+    using the smoothed derivative of the calibrated SoLEXS soft X-ray flux.
+    """
+    df = df.copy()
+    
+    # Calculate smoothed derivative of soft flux
+    smoothed_soft = df['soft_xray_flux'].rolling(window=5, min_periods=1).mean()
+    soft_deriv = smoothed_soft.diff().fillna(0)
+    
+    # The derivative can be negative during recovery, but hard X-ray flux is non-negative
+    # We clip it to 0 and apply a proportional scaling constant k
+    k = 0.05 # Baseline estimated proportionality constant
+    synthetic_hxr = np.clip(soft_deriv, a_min=0, a_max=None) * k
+    
+    # Fill gaps in hard_xray_flux where it's 0 or NaN
+    mask = (df['hard_xray_flux'].isna()) | (df['hard_xray_flux'] <= 1e-15)
+    df.loc[mask, 'hard_xray_flux'] = synthetic_hxr[mask]
+    
+    return df
+
 def extract_features(df, rolling_window=10):
     """
     Extracts the 5 required features per timestep:
@@ -15,6 +40,10 @@ def extract_features(df, rolling_window=10):
     """
     # Create a copy to avoid SettingWithCopyWarning
     df = df.copy()
+    
+    # Apply Neupert gap-filling before extracting derived features
+    if 'hard_xray_flux' in df.columns:
+        df = apply_neupert_enrichment(df)
     
     # 1 & 2 are already present
     
