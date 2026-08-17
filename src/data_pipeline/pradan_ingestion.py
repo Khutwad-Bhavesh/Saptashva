@@ -113,6 +113,11 @@ def process_pradan_directory(directory_path, freq='60S'):
         raise FileNotFoundError("Could not find both SoLEXS (.lc.gz) and HEL1OS (.fits) files in the directory.")
         
     solexs_df = load_solexs_lc(solexs_file)
+    
+    # Apply Calibration
+    from src.data_pipeline.calibration import calibrate_solexs
+    solexs_df = calibrate_solexs(solexs_df, goes_df=None)
+    
     hel1os_df = load_hel1os_bands(hel1os_file)
     
     final_df = merge_and_resample(solexs_df, hel1os_df, freq=freq)
