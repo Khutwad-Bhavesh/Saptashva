@@ -12,6 +12,8 @@ ENV/
 
 # Data and Models
 data/
+datasets/
+!datasets/.keep
 models/*.pth
 models/*.pkl
 models/*.json
