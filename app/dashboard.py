@@ -27,7 +27,7 @@ data_source = st.sidebar.radio(
     ("Synthetic Data", "Real PRADAN Data")
 )
 
-pradan_dir = st.sidebar.text_input("PRADAN Data Directory:", value="/home/aizen-sosuke/Study/SAPTASHVA/data")
+pradan_dir = st.sidebar.text_input("PRADAN Data Directory:", value="/home/aizen-sosuke/Study/SAPTASHVA/datasets")
 
 run_button = st.sidebar.button("Run Inference Pipeline")
 
