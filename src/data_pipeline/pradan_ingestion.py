@@ -73,10 +73,10 @@ def load_hel1os_bands(file_path, target_bands=None):
     combined_df = combined_df.rename(columns={'flux': 'hard_xray_flux'})
     return combined_df
 
-def merge_and_resample(solexs_df, hel1os_df, freq='60S'):
+def merge_and_resample(solexs_df, hel1os_df, freq='60s'):
     """
     Merges SoLEXS and HEL1OS dataframes and resamples them to a uniform cadence.
-    freq='60S' aligns the data to 1-minute bins for the LSTM.
+    freq='60s' aligns the data to 1-minute bins for the LSTM.
     """
     # Merge outer to keep all timestamps before resampling
     merged_df = pd.merge(solexs_df, hel1os_df, left_index=True, right_index=True, how='outer')
@@ -93,33 +93,58 @@ def merge_and_resample(solexs_df, hel1os_df, freq='60S'):
     
     return resampled_df
 
-def process_pradan_directory(directory_path, freq='60S'):
+def process_pradan_directory(directory_path, freq='60s'):
     """
-    Scans a directory for SoLEXS and HEL1OS files, processes them, and returns a unified DataFrame.
+    Scans a directory for all SoLEXS and HEL1OS light curve files, 
+    processes them, and returns a unified concatenated DataFrame.
     """
-    solexs_file = None
-    hel1os_file = None
+    solexs_dfs = []
+    hel1os_dfs = []
     
-    # Find the relevant files in the directory
+    print(f"Scanning {directory_path} for ISRO FITS data...")
+    # Find all relevant files in the directory
     for root, dirs, files in os.walk(directory_path):
         for file in files:
+            file_path = os.path.join(root, file)
             if 'SOLEXS' in file.upper() and file.endswith('.lc.gz'):
-                solexs_file = os.path.join(root, file)
-            # HEL1OS FITS typically end in .fits
-            elif 'HEL1OS' in file.upper() and file.endswith('.fits'):
-                hel1os_file = os.path.join(root, file)
+                try:
+                    df = load_solexs_lc(file_path)
+                    if not df.empty:
+                        solexs_dfs.append(df)
+                except Exception as e:
+                    print(f"Skipping {file}: {e}")
+                    
+            # HEL1OS lightcurves typically have 'lightcurve' in the name
+            elif 'LIGHTCURVE' in file.upper() and file.endswith('.fits'):
+                try:
+                    df = load_hel1os_bands(file_path)
+                    if not df.empty:
+                        hel1os_dfs.append(df)
+                except Exception as e:
+                    print(f"Skipping {file}: {e}")
                 
-    if not solexs_file or not hel1os_file:
-        raise FileNotFoundError("Could not find both SoLEXS (.lc.gz) and HEL1OS (.fits) files in the directory.")
-        
-    solexs_df = load_solexs_lc(solexs_file)
+    if not solexs_dfs:
+        raise FileNotFoundError("Could not find any valid SoLEXS (.lc.gz) data.")
+    
+    print(f"Concatenating {len(solexs_dfs)} SoLEXS files...")
+    solexs_df = pd.concat(solexs_dfs).sort_index()
+    # Remove duplicates if any overlapping files exist
+    solexs_df = solexs_df[~solexs_df.index.duplicated(keep='first')]
     
     # Apply Calibration
     from src.data_pipeline.calibration import calibrate_solexs
     solexs_df = calibrate_solexs(solexs_df, goes_df=None)
     
-    hel1os_df = load_hel1os_bands(hel1os_file)
+    if hel1os_dfs:
+        print(f"Concatenating {len(hel1os_dfs)} HEL1OS files...")
+        hel1os_df = pd.concat(hel1os_dfs).sort_index()
+        hel1os_df = hel1os_df[~hel1os_df.index.duplicated(keep='first')]
+    else:
+        print("Warning: No valid HEL1OS files found. Creating empty proxy for Neupert enrichment.")
+        # Create an empty dataframe with same index to trigger Neupert enrichment gap-filling later
+        hel1os_df = pd.DataFrame({'hard_xray_flux': np.nan}, index=solexs_df.index)
     
+    print("Merging and resampling timelines...")
     final_df = merge_and_resample(solexs_df, hel1os_df, freq=freq)
     return final_df
 
@@ -142,8 +167,9 @@ def add_pseudo_labels(df):
     states[df['soft_xray_flux'] > quiet_thresh] = 1 # Active
     states[df['soft_xray_flux'] > active_thresh] = 2 # Eruptive
     
-    # For recovery, we would need to look at derivative (negative slope after a peak).
-    # This is just a placeholder to make the dataframe compatible with training.
+    # For recovery, look at negative slope (derivative)
+    soft_deriv = df['soft_xray_flux'].diff().fillna(0)
+    states[(df['soft_xray_flux'] > quiet_thresh) & (soft_deriv < 0)] = 3 # Recovery
     
     df['state'] = states
     return df

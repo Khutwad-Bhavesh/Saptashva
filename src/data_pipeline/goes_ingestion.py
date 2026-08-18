@@ -1,0 +1,60 @@
+import os
+import glob
+import pandas as pd
+import numpy as np
+from sunpy.net import Fido, attrs as a
+import sunpy.timeseries as ts
+
+def download_halloween_storms(data_dir="datasets/goes_2003"):
+    """
+    Downloads GOES XRS data for the Halloween Solar Storms (Oct 2003).
+    """
+    os.makedirs(data_dir, exist_ok=True)
+    print("Querying Virtual Solar Observatory for GOES XRS data (2003-10-20 to 2003-11-05)...")
+    
+    # Query Fido for GOES data during the legendary Halloween Storms
+    query = Fido.search(a.Time('2003-10-20', '2003-11-05'), a.Instrument("XRS"))
+    print(f"Found {query.file_num} files.")
+    
+    # Download files securely without triggering anti-bot throttling
+    print("Downloading files cleanly...")
+    downloaded_files = Fido.fetch(query, path=data_dir + "/{file}")
+    print("Download complete.")
+    return downloaded_files
+
+def parse_goes_timeseries(data_dir="datasets/goes_2003"):
+    """
+    Parses all downloaded NetCDF/FITS GOES files into a clean Pandas DataFrame.
+    """
+    files = glob.glob(os.path.join(data_dir, "*"))
+    if not files:
+        print("No files found. Downloading now...")
+        files = download_halloween_storms(data_dir)
+        
+    dfs = []
+    for f in sorted(files):
+        try:
+            # SunPy handles the complexities of FITS/NetCDF parsing automatically
+            goes_ts = ts.TimeSeries(f)
+            df = goes_ts.to_dataframe()
+            # SunPy standardizes columns. Usually: 'xrsa' (hard), 'xrsb' (soft)
+            if 'xrsa' in df.columns and 'xrsb' in df.columns:
+                df = df.rename(columns={'xrsa': 'hard_flux', 'xrsb': 'soft_flux'})
+                # Only keep flux columns
+                df = df[['soft_flux', 'hard_flux']]
+                dfs.append(df)
+        except Exception as e:
+            print(f"Skipping {f} due to parsing error: {e}")
+            
+    if not dfs:
+        raise ValueError("Failed to parse any GOES data.")
+        
+    master_df = pd.concat(dfs).sort_index()
+    # Resample to 60s to match SAPTASHVA architecture
+    master_df = master_df.resample('60s').mean().interpolate(method='linear')
+    return master_df
+
+if __name__ == "__main__":
+    df = parse_goes_timeseries()
+    print(df.head())
+    print(f"Total rows: {len(df)}")
