@@ -24,3 +24,7 @@ models/*.json
 
 # macOS
 .DS_Store
+models/
+.venv/
+__pycache__/
+*.nc
