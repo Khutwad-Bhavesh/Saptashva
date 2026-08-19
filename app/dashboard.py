@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.utils.data_generator import generate_synthetic_data
 from src.data_pipeline.pradan_ingestion import process_pradan_directory
+from src.data_pipeline.goes_ingestion import parse_goes_timeseries
 from src.features.engineering import extract_features, prepare_lstm_sequences
 from src.stage0.inference import Stage0Predictor
 from src.escalation.inference import EscalationPredictor
@@ -24,10 +25,15 @@ st.sidebar.header("Configuration")
 
 data_source = st.sidebar.radio(
     "Select Data Source:",
-    ("Synthetic Data", "Real PRADAN Data")
+    ("Synthetic Data", "Real PRADAN Data", "NASA GOES Data")
 )
 
 pradan_dir = st.sidebar.text_input("PRADAN Data Directory:", value="/home/aizen-sosuke/Study/SAPTASHVA/datasets")
+
+# Model selection based on data source
+use_goes_model = data_source == "NASA GOES Data"
+model_label = "GOES Foundation Model" if use_goes_model else "ISRO PRADAN Model"
+st.sidebar.info(f"Active Model: **{model_label}**")
 
 run_button = st.sidebar.button("Run Inference Pipeline")
 
@@ -43,6 +49,17 @@ if run_button:
     with st.spinner("Loading Data..."):
         if data_source == "Synthetic Data":
             df_raw = generate_synthetic_data(num_samples=300, seed=42)
+        elif data_source == "NASA GOES Data":
+            try:
+                df_raw = parse_goes_timeseries()
+                # Rename columns to match SAPTASHVA standard
+                df_raw = df_raw.rename(columns={'soft_flux': 'soft_xray_flux', 'hard_flux': 'hard_xray_flux'})
+                # Use a representative window for dashboard demo (last 500 points)
+                if len(df_raw) > 500:
+                    df_raw = df_raw.iloc[-500:]
+            except Exception as e:
+                st.error(f"Error loading NASA GOES data: {e}")
+                st.stop()
         else:
             try:
                 df_raw = process_pradan_directory(pradan_dir)
@@ -57,14 +74,14 @@ if run_button:
         df_feat = extract_features(df_raw)
         feature_cols = ['soft_xray_flux', 'hard_xray_flux', 'flux_ratio', 'soft_flux_deriv', 'soft_flux_roll_std']
         
-        # We need a dummy state col for the preparation function, or we can just pass df_feat
+        # We need a dummy state col for the preparation function
         if 'state' not in df_feat.columns:
             df_feat['state'] = 0 
             
         X_seq, _ = prepare_lstm_sequences(df_feat, feature_cols=feature_cols, target_col='state', lookback=60)
         
         try:
-            stage0_pred = Stage0Predictor()
+            stage0_pred = Stage0Predictor(use_goes=use_goes_model)
             esc_pred = EscalationPredictor()
         except Exception as e:
             st.error(f"Failed to load models. Have you trained them yet? Error: {e}")
@@ -83,10 +100,10 @@ if run_button:
             applied_alert, raw_alert = esc_pred.predict(xgb_feats)
             
             # The timestamp corresponding to this prediction is at i + 60
-            ts = df_feat.iloc[i + 60].name if isinstance(df_feat.index, pd.DatetimeIndex) else df_feat.iloc[i + 60]['timestamp']
+            ts_idx = df_feat.iloc[i + 60].name if isinstance(df_feat.index, pd.DatetimeIndex) else df_feat.iloc[i + 60]['timestamp']
             
             results.append({
-                'timestamp': ts,
+                'timestamp': ts_idx,
                 'predicted_state': predicted_state,
                 'alert_level': applied_alert,
                 'soft_flux': last_feats[0],
@@ -121,7 +138,6 @@ if run_button:
     ))
     
     # Add background shading for Predicted States
-    # We will use shape rectangles to shade regions based on state
     for idx in range(len(df_results) - 1):
         state = df_results.iloc[idx]['predicted_state']
         if state != 0: # Only shade non-quiet states
@@ -163,11 +179,13 @@ if run_button:
     
     # Display current status
     latest = df_results.iloc[-1]
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Latest State", STATE_MAP[latest['predicted_state']])
     with col2:
         st.metric("Latest Alert Level", ALERT_MAP[latest['alert_level']])
+    with col3:
+        st.metric("Active Model", model_label)
         
 else:
     st.info("Configure the data source in the sidebar and click 'Run Inference Pipeline' to start.")
