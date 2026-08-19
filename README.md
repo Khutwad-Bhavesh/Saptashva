@@ -27,3 +27,4 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 - Peak Validation Accuracy: 88.00%
 - Final Validation Accuracy: 85.87%
 - Data size: 260,640 samples
+- Fix: Implemented Stratified Shuffle Split
