@@ -25,3 +25,4 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 
 ## Phase 4 Results
 - Peak Validation Accuracy: 88.00%
+- Final Validation Accuracy: 85.87%
