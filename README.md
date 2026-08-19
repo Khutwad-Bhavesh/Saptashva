@@ -22,3 +22,5 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
    ```bash
    python -m tests.test_ingestion ./data
    ```
+
+## Phase 4 Results
