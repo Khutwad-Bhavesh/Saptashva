@@ -12,10 +12,10 @@ class Stage0LSTM(nn.Module):
         
         # We use batch_first=True so input shape is (batch, seq_len, features)
         self.lstm1 = nn.LSTM(input_size=input_size, hidden_size=hidden_size1, batch_first=True)
-        self.dropout1 = nn.Dropout(0.5)
+        self.dropout1 = nn.Dropout(0.3)
         
         self.lstm2 = nn.LSTM(input_size=hidden_size1, hidden_size=hidden_size2, batch_first=True)
-        self.dropout2 = nn.Dropout(0.4)
+        self.dropout2 = nn.Dropout(0.2)
         
         self.fc = nn.Linear(hidden_size2, num_classes)
         
