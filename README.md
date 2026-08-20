@@ -33,3 +33,4 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 ## Phase 5: Cloud Migration
 - Pre-configured for Google Colab Pro and Vertex AI
 - Supports full 11-year Solar Cycle 24 download via sunpy
+- Automatically detects and utilizes A100/T4 Cloud GPUs
