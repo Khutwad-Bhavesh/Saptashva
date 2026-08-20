@@ -29,3 +29,5 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 - Data size: 260,640 samples
 - Fix: Implemented Stratified Shuffle Split
 - Feature: Live Streamlit UI integrated with NASA data
+
+## Phase 5: Cloud Migration
