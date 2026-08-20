@@ -1,0 +1,12 @@
+sunpy[all]
+astropy
+scikit-learn
+joblib
+pandas
+numpy
+xgboost
+tqdm
+drms
+zeep
+cdflib
+# We don't specify torch here because Colab/GCP instances come with GPU-accelerated PyTorch pre-installed.
