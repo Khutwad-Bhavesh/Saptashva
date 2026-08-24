@@ -36,3 +36,4 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 - Automatically detects and utilizes A100/T4 Cloud GPUs
 
 ### Breakthrough: SAPTASHVA hits 93.67% Validation Accuracy on 11-year dataset.
+- 5 million data points processed locally via parquet caching.
