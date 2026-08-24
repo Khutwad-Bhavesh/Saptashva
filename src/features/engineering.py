@@ -18,7 +18,7 @@ def apply_neupert_enrichment(df):
     # The derivative can be negative during recovery, but hard X-ray flux is non-negative
     # We clip it to 0 and apply a proportional scaling constant k
     k = 0.05 # Baseline estimated proportionality constant
-    synthetic_hxr = np.clip(soft_deriv, a_min=0, a_max=None) * k
+    synthetic_hxr = (np.clip(soft_deriv, a_min=0, a_max=None) * k).astype('float32')
     
     # Fill gaps in hard_xray_flux where it's 0 or NaN
     mask = (df['hard_xray_flux'].isna()) | (df['hard_xray_flux'] <= 1e-15)
