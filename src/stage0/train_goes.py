@@ -20,9 +20,9 @@ from src.stage0.lstm_model import Stage0LSTM
 def main():
     print("=== SAPTASHVA Phase 4: Expanded Dataset Foundation Model ===")
     
-    # 1. Fetch expanded 6-month GOES data (Jan-Jun 2003)
-    data_dir = "datasets/goes_expanded"
-    df = parse_goes_timeseries(data_dir=data_dir, expanded=True)
+    # 1. Fetch full 11-year Solar Cycle 24 GOES data (2010-2021)
+    data_dir = "datasets/goes_11_year"
+    df = parse_goes_timeseries(data_dir=data_dir)
     
     # Align column names with engineering.py expectations
     df = df.rename(columns={'soft_flux': 'soft_xray_flux', 'hard_flux': 'hard_xray_flux'})
