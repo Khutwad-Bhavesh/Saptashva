@@ -15,55 +15,65 @@ from src.features.engineering import extract_features, prepare_lstm_sequences
 from src.stage0.inference import Stage0Predictor
 from src.escalation.inference import EscalationPredictor
 
-# --- UI OVERHAUL: Glassmorphism & Cyberpunk CSS ---
-st.set_page_config(page_title="SAPTASHVA | Aerospace Command", layout="wide", initial_sidebar_state="expanded")
+# --- UI OVERHAUL: ISRO Aerospace Command CSS ---
+st.set_page_config(page_title="ISRO SAPTASHVA | Telemetry Node", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
 <style>
-    /* Global Background */
+    /* Global Background - Strict Black */
     .stApp {
-        background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
-        color: #f8fafc;
+        background: #000000;
+        color: #00ff00;
     }
     
-    /* Neon Glow Typography */
+    /* Monospace Headers & Aerospace Typography */
+    h1, h2, h3, p, span, div {
+        font-family: 'Courier New', Courier, monospace !important;
+    }
+    
+    h1, h2, h3 {
+        font-weight: bold;
+        color: #00ff00;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+    
     h1 {
-        font-family: 'Inter', sans-serif;
-        font-weight: 800;
-        background: -webkit-linear-gradient(45deg, #38bdf8, #818cf8);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        letter-spacing: -1px;
+        border-bottom: 2px solid #00ff00;
+        padding-bottom: 10px;
+        display: inline-block;
     }
     
-    /* Glassmorphism Metric Cards */
+    /* Metric Cards - Strict Terminal Green/Black */
     div[data-testid="metric-container"] {
-        background: rgba(30, 41, 59, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-radius: 12px;
+        background: #000000;
+        border: 1px solid #00ff00;
+        border-radius: 0px;
         padding: 1rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
     }
     
     div[data-testid="metric-container"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.2), 0 4px 6px -2px rgba(56, 189, 248, 0.1);
-        border: 1px solid rgba(56, 189, 248, 0.5);
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
     }
     
     /* Sidebar Styling */
     section[data-testid="stSidebar"] {
-        background-color: #0f172a !important;
-        border-right: 1px solid rgba(255,255,255,0.05);
+        background-color: #050505 !important;
+        border-right: 1px solid #00ff00;
+    }
+    
+    /* Dataframe Styling for Logs */
+    .dataframe {
+        font-family: 'Courier New', Courier, monospace !important;
+        font-size: 0.9rem;
+        color: #00ff00 !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("SAPTASHVA // COMMAND CENTER")
-st.markdown("*Advanced Orbital Detection Architecture for Aditya-L1 and GOES Satellites*")
+st.title("ISRO ADITYA-L1 // SAPTASHVA TELEMETRY NODE")
+st.markdown("*Operational Solar Flare Detection & Early-Warning Architecture*")
 
 # --- Sidebar Controls ---
 st.sidebar.markdown("### MISSION CONFIGURATION")
@@ -77,7 +87,7 @@ use_goes_model = data_source == "NASA GOES Cycle 24"
 model_label = "V5 93.67% Foundation Model" if use_goes_model else "ISRO Base Model"
 st.sidebar.info(f"Active Core: **{model_label}**")
 
-run_button = st.sidebar.button("INITIATE INFERENCE PIPELINE", type="primary")
+run_button = st.sidebar.button("INITIATE UPLINK & INFERENCE", type="primary")
 
 # --- Mappings ---
 STATE_MAP = {0: "Quiet", 1: "Active", 2: "Eruptive", 3: "Recovery"}
@@ -92,7 +102,6 @@ if run_button:
         
         if data_source == "Synthetic Simulation":
             df_raw = generate_synthetic_data(num_samples=300, seed=42)
-            # Generate synthetic 2D spectrogram (Time x Energy Bins)
             spectrogram_times = df_raw['timestamp']
             spectrogram_data = np.random.lognormal(mean=0, sigma=1, size=(300, 10))
             spectrogram_data = spectrogram_data * (df_raw['soft_xray_flux'].values[:, None] * 1e6)
@@ -102,7 +111,7 @@ if run_button:
                 df_raw = parse_goes_timeseries()
                 df_raw = df_raw.rename(columns={'soft_flux': 'soft_xray_flux', 'hard_flux': 'hard_xray_flux'})
                 if len(df_raw) > 500:
-                    df_raw = df_raw.iloc[-500:] # Grab tail for UI performance
+                    df_raw = df_raw.iloc[-500:] 
             except Exception as e:
                 st.error(f"Uplink Error: {e}")
                 st.stop()
@@ -112,7 +121,6 @@ if run_button:
                 if len(df_raw) > 500:
                     df_raw = df_raw.iloc[:500]
                     
-                # Attempt to extract spectral cube for spectrogram
                 lc_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(pradan_dir) for f in fn if 'SOLEXS' in f.upper() and f.endswith('.lc.gz')]
                 if lc_files:
                     try:
@@ -120,12 +128,12 @@ if run_button:
                         spectrogram_times = times[:500]
                         spectrogram_data = counts_2d[:500, :]
                     except:
-                        pass # Fallback if spectral extraction fails
+                        pass 
             except Exception as e:
                 st.error(f"ISRO Ingestion Error: {e}")
                 st.stop()
                 
-    with st.spinner("Extracting Temporal Features & Running Core Engine..."):
+    with st.spinner("Executing Mathematical Core..."):
         df_feat = extract_features(df_raw)
         feature_cols = ['soft_xray_flux', 'hard_xray_flux', 'flux_ratio', 'soft_flux_deriv', 'soft_flux_roll_std']
         
@@ -146,6 +154,7 @@ if run_button:
             seq = X_seq[i]
             probs = stage0_pred.predict(seq)
             predicted_state = np.argmax(probs)
+            confidence = np.max(probs) * 100 # Extract Confidence %
             
             last_feats = seq[-1, :]
             xgb_feats = np.concatenate([probs, last_feats]).reshape(1, -1)
@@ -154,11 +163,14 @@ if run_button:
             ts_idx = df_feat.iloc[i + 60].name if isinstance(df_feat.index, pd.DatetimeIndex) else df_feat.iloc[i + 60]['timestamp']
             
             results.append({
-                'timestamp': ts_idx,
-                'predicted_state': predicted_state,
-                'alert_level': applied_alert,
-                'soft_flux': last_feats[0],
-                'hard_flux': last_feats[1]
+                'Timestamp (UTC)': ts_idx,
+                'State': STATE_MAP[predicted_state],
+                'Confidence (%)': f"{confidence:.2f}%",
+                'Escalation': ALERT_MAP[applied_alert],
+                'Soft Flux (W/m²)': last_feats[0],
+                'Hard Flux (W/m²)': last_feats[1],
+                '_predicted_state': predicted_state, # Hidden for internal mapping
+                '_alert_level': applied_alert
             })
             
         df_results = pd.DataFrame(results)
@@ -168,45 +180,45 @@ if run_button:
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("CURRENT ORBITAL STATE", STATE_MAP[latest['predicted_state']])
+        st.metric("ORBITAL STATE", latest['State'])
     with col2:
-        st.metric("THREAT ESCALATION", ALERT_MAP[latest['alert_level']])
+        st.metric("AI CREDIBILITY", latest['Confidence (%)'])
     with col3:
-        st.metric("SOFT FLUX (W/m²)", f"{latest['soft_flux']:.2e}")
+        st.metric("THREAT ESCALATION", latest['Escalation'])
     with col4:
-        st.metric("ACTIVE CORE", model_label)
+        st.metric("SOFT FLUX (W/m²)", f"{latest['Soft Flux (W/m²)']:.2e}")
         
     st.markdown("---")
     
-    # --- Advanced Plotly Theming ---
-    tab1, tab2 = st.tabs(["1D LIGHTCURVE KINEMATICS", "2D SPECTRAL FOOTPRINT"])
+    # --- Advanced Aerospace Theming ---
+    tab1, tab2, tab3 = st.tabs(["[1] 1D KINEMATICS", "[2] 2D SPECTROGRAM", "[3] TELEMETRY LOG"])
     
     with tab1:
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=df_results['timestamp'], y=df_results['soft_flux'], mode='lines', name='Soft X-ray Flux', line=dict(color='#06b6d4', width=2)))
-        fig.add_trace(go.Scatter(x=df_results['timestamp'], y=df_results['hard_flux'], mode='lines', name='Hard X-ray Flux', line=dict(color='#ec4899', width=2)))
+        fig.add_trace(go.Scatter(x=df_results['Timestamp (UTC)'], y=df_results['Soft Flux (W/m²)'], mode='lines', name='Soft X-ray Flux', line=dict(color='#00ff00', width=2)))
+        fig.add_trace(go.Scatter(x=df_results['Timestamp (UTC)'], y=df_results['Hard Flux (W/m²)'], mode='lines', name='Hard X-ray Flux', line=dict(color='#008800', width=2, dash='dot')))
         
         for idx in range(len(df_results) - 1):
-            state = df_results.iloc[idx]['predicted_state']
+            state = df_results.iloc[idx]['_predicted_state']
             if state != 0: 
                 fig.add_vrect(
-                    x0=df_results.iloc[idx]['timestamp'], x1=df_results.iloc[idx+1]['timestamp'],
-                    fillcolor=STATE_COLORS.get(state, "white"), opacity=1, layer="below", line_width=0,
+                    x0=df_results.iloc[idx]['Timestamp (UTC)'], x1=df_results.iloc[idx+1]['Timestamp (UTC)'],
+                    fillcolor="rgba(0, 255, 0, 0.2)", opacity=1, layer="below", line_width=0,
                 )
                 
-        alerts = df_results[df_results['alert_level'] > 0]
+        alerts = df_results[df_results['_alert_level'] > 0]
         fig.add_trace(go.Scatter(
-            x=alerts['timestamp'], y=alerts['soft_flux'], mode='markers', name='CRITICAL ESCALATION',
-            marker=dict(color=[ALERT_COLORS[level] for level in alerts['alert_level']], size=12, symbol='triangle-up', line=dict(color='white', width=1)),
-            text=[f"Alert: {ALERT_MAP[level]}" for level in alerts['alert_level']], hoverinfo='text+x+y'
+            x=alerts['Timestamp (UTC)'], y=alerts['Soft Flux (W/m²)'], mode='markers', name='CRITICAL ESCALATION',
+            marker=dict(color='#00ff00', size=12, symbol='triangle-up', line=dict(color='#000000', width=1)),
+            text=[f"Alert: {ALERT_MAP[level]}" for level in alerts['_alert_level']], hoverinfo='text+x+y'
         ))
 
         fig.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            xaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.1)', title="UTC TIME"),
-            yaxis=dict(type="log", showgrid=True, gridcolor='rgba(255,255,255,0.1)', title="FLUX (W/m²)"),
+            paper_bgcolor='rgba(0,0,0,1)', plot_bgcolor='rgba(0,0,0,1)',
+            xaxis=dict(showgrid=True, gridcolor='rgba(0,255,0,0.2)', title="UTC TIME"),
+            yaxis=dict(type="log", showgrid=True, gridcolor='rgba(0,255,0,0.2)', title="FLUX (W/m²)"),
             hovermode="x unified",
-            font=dict(color='#94a3b8')
+            font=dict(color='#00ff00', family="Courier New")
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -223,11 +235,27 @@ if run_button:
                 title="SOLEXS High-Fidelity Energy Spectrogram",
                 xaxis_title="UTC TIME",
                 yaxis_title="ENERGY CHANNELS",
-                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='#94a3b8')
+                paper_bgcolor='rgba(0,0,0,1)', plot_bgcolor='rgba(0,0,0,1)',
+                font=dict(color='#00ff00', family="Courier New")
             )
             st.plotly_chart(fig_spec, use_container_width=True)
         else:
             st.info("Spectral 2D mapping is currently offline. NASA GOES data provides scalar fluxes. Select ISRO PRADAN or Synthetic for spectrogram generation.")
+            
+    with tab3:
+        st.markdown("### HISTORICAL PREDICTION LOG")
+        st.markdown("Real-time mathematical inference validation.")
+        
+        # Drop internal mapping columns for the clean UI log
+        display_df = df_results.drop(columns=['_predicted_state', '_alert_level'])
+        # Sort so most recent is at the top
+        display_df = display_df.sort_values(by='Timestamp (UTC)', ascending=False).reset_index(drop=True)
+        
+        # Display as a styled dataframe
+        st.dataframe(
+            display_df,
+            use_container_width=True,
+            hide_index=True
+        )
 else:
     st.info("Awaiting command sequence. Configure telemetry in the sidebar and initiate pipeline.")
