@@ -44,3 +44,4 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 
 ## Phase 7: Deep Optimization & Checkpointing
 - Scaled model capacity to 128x64 LSTM for deeper feature extraction.
+- Switched back to Plateau Learning Rate Scheduler for stable gradient descent.
