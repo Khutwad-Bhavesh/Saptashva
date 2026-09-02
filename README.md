@@ -46,3 +46,4 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 - Scaled model capacity to 128x64 LSTM for deeper feature extraction.
 - Switched back to Plateau Learning Rate Scheduler for stable gradient descent.
 - Implemented dynamic mid-training PyTorch Model Checkpointing to disk.
+- Added Graceful Degradation to catch KeyboardInterrupts and salvage best weights.
