@@ -47,3 +47,4 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 - Switched back to Plateau Learning Rate Scheduler for stable gradient descent.
 - Implemented dynamic mid-training PyTorch Model Checkpointing to disk.
 - Added Graceful Degradation to catch KeyboardInterrupts and salvage best weights.
+- Removed unstable Focal Loss in favor of Weighted Cross-Entropy.
