@@ -41,3 +41,5 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 
 ## Phase 6: System Interface & Spectral Diagnostics
 - Deployed 2D Spectrogram component for ISRO Aditya-L1 data via Astropy.
+
+## Phase 7: Deep Optimization & Checkpointing
