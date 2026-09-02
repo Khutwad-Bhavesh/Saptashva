@@ -43,3 +43,4 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 - Deployed 2D Spectrogram component for ISRO Aditya-L1 data via Astropy.
 
 ## Phase 7: Deep Optimization & Checkpointing
+- Scaled model capacity to 128x64 LSTM for deeper feature extraction.
