@@ -50,3 +50,4 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 - Removed unstable Focal Loss in favor of Weighted Cross-Entropy.
 
 ### Milestone: 94.54% Accuracy reached on Epoch 35
+- Model reached 94.54% validation accuracy with 128x64 LSTM.
