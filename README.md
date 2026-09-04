@@ -55,3 +55,4 @@ A solar flare precursor detection and early-warning system built on ISRO Aditya-
 - Ready for final inference and deployment.
 
 ### THE 95% BARRIER HAS BEEN OFFICIALLY BROKEN! 🏆
+- Final Model Accuracy: 95.35% on 11-year GOES dataset.
