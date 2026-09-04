@@ -10,6 +10,20 @@
 
 ---
 
+## 🖥️ Mission Control Interface
+
+The entire neural engine is wrapped in a highly technical, low-latency, hacker-aesthetic Streamlit dashboard designed for live satellite operations.
+
+<p align="center">
+  <img src="assets/dashboard_setup.png" width="48%" />
+  <img src="assets/dashboard_kinematics.png" width="48%" />
+  <br>
+  <img src="assets/dashboard_spectrogram.png" width="48%" />
+  <img src="assets/dashboard_log.png" width="48%" />
+</p>
+
+---
+
 ## 🧠 Core Architecture
 
 SAPTASHVA operates on a two-tier mathematical framework:
